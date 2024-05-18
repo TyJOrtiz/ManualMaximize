@@ -60,10 +60,41 @@ namespace ManualMaximize
         public MainPage()
         {
             this.InitializeComponent();
-            LaunchCustomTitleBar();
+
+            this.SizeChanged += MainPage_SizeChanged;
+
             //return;
             App.AppServiceRequestReceived += ServiceConnection_RequestReceived;
         }
+
+        private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            //Debug.WriteLine(bounds.Top);
+            //Debug.WriteLine(bounds.Bottom);
+            var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
+            var size = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
+
+            Debug.WriteLine(bounds.Width * scaleFactor);
+            //Debug.WriteLine(bounds.Bottom * scaleFactor);
+            //Debug.WriteLine(48 * scaleFactor);
+            //Debug.WriteLine(DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels);
+            var isTouchingTaskbar = Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven) == 48;
+            Debug.WriteLine($"Taskbar height is {Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven)}");
+            if (bounds.Top == 0 && isTouchingTaskbar && bounds.Width * scaleFactor == DisplayInformation.GetForCurrentView().ScreenWidthInRawPixels)
+            {
+
+                ClickButton2.Content = "\uE923";
+            }
+            else
+            {
+
+                ClickButton2.Content = "\uE922";
+            }
+            //Debug.WriteLine(size);
+            //Debug.WriteLine(40 * scaleFactor);
+        }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -72,12 +103,41 @@ namespace ManualMaximize
 
         private void LaunchCustomTitleBar()
         {
+
             var x = Window.Current.CoreWindow;
             IInternalCoreWindowPhone internalCoreWindowPhone = (IInternalCoreWindowPhone)(object)x;
             IApplicationWindowTitleBarNavigationClient navigationClient = (IApplicationWindowTitleBarNavigationClient)internalCoreWindowPhone.NavigationClient;
             navigationClient.TitleBarPreferredVisibilityMode = AppWindowTitleBarVisibility.AlwaysHidden;
+            TitleBarHost.Visibility = Visibility.Visible;
             Window.Current.SetTitleBar(TitleBar);
             ApplicationView.TerminateAppOnFinalViewClose = true;
+            CheckWindowSize();
+        }
+
+        private void CheckWindowSize()
+        {
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            //Debug.WriteLine(bounds.Top);
+            //Debug.WriteLine(bounds.Bottom);
+            var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
+            var size = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
+
+            Debug.WriteLine(bounds.Width * scaleFactor);
+            //Debug.WriteLine(bounds.Bottom * scaleFactor);
+            //Debug.WriteLine(48 * scaleFactor);
+            //Debug.WriteLine(DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels);
+            var isTouchingTaskbar = Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven) == 48;
+            Debug.WriteLine($"Taskbar height is {Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven)}");
+            if (bounds.Top == 0 && isTouchingTaskbar && bounds.Width * scaleFactor == DisplayInformation.GetForCurrentView().ScreenWidthInRawPixels)
+            {
+
+                ClickButton2.Content = "\uE923";
+            }
+            else
+            {
+
+                ClickButton2.Content = "\uE922";
+            }
         }
 
         private void ServiceConnection_RequestReceived(object sender, AppServiceRequestReceivedEventArgs e)
@@ -97,6 +157,7 @@ namespace ManualMaximize
         }
         private void MainPage_AppServiceConnected(object sender, AppServiceTriggerDetails e)
         {
+            LaunchCustomTitleBar();
             App.Connection.RequestReceived += AppServiceConnection_RequestReceived;
         }
 

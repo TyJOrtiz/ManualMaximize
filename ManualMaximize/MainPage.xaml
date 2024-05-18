@@ -12,7 +12,7 @@
         <SplitView x:Name="MySplit" DisplayMode="Inline" IsPaneOpen="True" PaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}">
             <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"></Grid>
         </SplitView>
-        <Grid Background="Transparent" VerticalAlignment="Top">
+        <Grid Background="Transparent" x:Name="TitleBarHost" Visibility="Collapsed" VerticalAlignment="Top">
             <Grid Background="Transparent" IsHitTestVisible="True" Height="48" x:Name="TitleBar"></Grid>
 
             <StackPanel Visibility="Collapsed" Spacing="12" Margin="24,16" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
@@ -323,7 +323,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button x:Name="ClickButton2" Click="Button_Click" Visibility="Collapsed" Height="48" Width="48" FontSize="10">&#xE922;
+                <Button x:Name="ClickButton2" Click="Button_Click" Visibility="Visible" Height="48" Width="48" FontSize="10">&#xE922;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
