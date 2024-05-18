@@ -60,9 +60,14 @@ namespace ManualMaximize
         public MainPage()
         {
             this.InitializeComponent();
-            LaunchFullTrust();
             LaunchCustomTitleBar();
+            //return;
             App.AppServiceRequestReceived += ServiceConnection_RequestReceived;
+        }
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            LaunchFullTrust();
         }
 
         private void LaunchCustomTitleBar()
@@ -83,21 +88,47 @@ namespace ManualMaximize
 
         private async void LaunchFullTrust()
         {
+            App.AppServiceConnected += MainPage_AppServiceConnected;
+            App.AppServiceDisconnected += MainPage_AppServiceDisconnected;
             if (ApiInformation.IsApiContractPresent("Windows.ApplicationModel.FullTrustAppContract", 1, 0))
             {
                 await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
             }
         }
+        private void MainPage_AppServiceConnected(object sender, AppServiceTriggerDetails e)
+        {
+            App.Connection.RequestReceived += AppServiceConnection_RequestReceived;
+        }
+
+        private void AppServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        {
+            Debug.WriteLine(args.Request.Message.First());
+        }
+
+        /// <summary>
+        /// When the desktop process is disconnected, reconnect if needed
+        /// </summary>
+        private void MainPage_AppServiceDisconnected(object sender, EventArgs e)
+        {
+            //await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            //{
+            //    // disable UI to access the connection
+            //    btnRegKey.IsEnabled = false;
+
+            //    // ask user if they want to reconnect
+            //    Reconnect();
+            //});
+        }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
 
-            if (App._appServiceConnection != null)
-            {
+            //if (App._appServiceConnection != null)
+            //{
                 ValueSet valueSet = new ValueSet();
                 valueSet.Add("request", "toggleState");
 
-                AppServiceResponse response = await App._appServiceConnection.SendMessageAsync(valueSet);
+                AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
                 if (response.Message.Any())
                 {
                     Debug.WriteLine(response.Message.First());
@@ -113,26 +144,34 @@ namespace ManualMaximize
                             break;
                     }
                 }
-            }
+            //}
         }
         private async void Button_Click2(object sender, RoutedEventArgs e)
         {
-            if (App._appServiceConnection != null)
-            {
+            //if (App._appServiceConnection != null)
+            //{
                 ValueSet valueSet = new ValueSet();
                 valueSet.Add("request", "minimize");
 
-                AppServiceResponse response = await App._appServiceConnection.SendMessageAsync(valueSet);
+                AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
                 if (response.Message.Any())
                 {
                     Debug.WriteLine(response.Message.First());
                 }
-            }
+            //}
         }
 
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
             await ApplicationView.GetForCurrentView().TryConsolidateAsync();
+            try
+            {
+                Application.Current.Exit();
+            }
+            catch
+            {
+
+            }
         }
 
         private void Button_Click_3(object sender, RoutedEventArgs e)

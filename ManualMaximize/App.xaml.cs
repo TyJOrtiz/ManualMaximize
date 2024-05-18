@@ -27,6 +27,10 @@ namespace ManualMaximize
     /// </summary>
     sealed partial class App : Application
     {
+        public static BackgroundTaskDeferral AppServiceDeferral = null;
+        public static AppServiceConnection Connection = null;
+        public static event EventHandler AppServiceDisconnected;
+        public static event EventHandler<AppServiceTriggerDetails> AppServiceConnected;
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -36,25 +40,88 @@ namespace ManualMaximize
             this.InitializeComponent();
             this.Suspending += OnSuspending;
         }
-        private BackgroundTaskDeferral _appServiceDeferral;
-        public static AppServiceConnection _appServiceConnection;
-        public static Dictionary<UIContext, AppWindow> AppWindows = new Dictionary<UIContext, AppWindow>();
-        internal static bool FirstLaunch = true;
-
         protected override void OnBackgroundActivated(BackgroundActivatedEventArgs args)
         {
             base.OnBackgroundActivated(args);
-            IBackgroundTaskInstance taskInstance = args.TaskInstance;
-            AppServiceTriggerDetails appService = taskInstance.TriggerDetails as AppServiceTriggerDetails;
-            _appServiceDeferral = taskInstance.GetDeferral();
-            _appServiceConnection = appService.AppServiceConnection;
-            _appServiceConnection.RequestReceived += ServiceConnection_RequestReceived;
+
+            if (args.TaskInstance.TriggerDetails.GetType() == typeof(AppServiceTriggerDetails))
+            {
+                var details = args.TaskInstance.TriggerDetails as AppServiceTriggerDetails;
+                // only accept connections from callers in the same package
+                if (details.CallerPackageFamilyName == Package.Current.Id.FamilyName)
+                {
+                    // connection established from the fulltrust process
+                    AppServiceDeferral = args.TaskInstance.GetDeferral();
+                    args.TaskInstance.Canceled += OnTaskCanceled;
+
+                    Connection = details.AppServiceConnection;
+                    AppServiceConnected?.Invoke(this, args.TaskInstance.TriggerDetails as AppServiceTriggerDetails);
+                }
+            }
         }
-        public static event EventHandler<AppServiceRequestReceivedEventArgs> AppServiceRequestReceived;
-        private void ServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+
+        /// <summary>
+        /// Task canceled here means the app service client is gone
+        /// </summary>
+        private void OnTaskCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            AppServiceRequestReceived?.Invoke(sender, args);
+            AppServiceDeferral?.Complete();
+            AppServiceDeferral = null;
+            Connection = null;
+            AppServiceDisconnected?.Invoke(this, null);
         }
+
+        //private BackgroundTaskDeferral _appServiceDeferral;
+        //public static AppServiceConnection _appServiceConnection;
+        //public static Dictionary<UIContext, AppWindow> AppWindows = new Dictionary<UIContext, AppWindow>();
+        //internal static bool FirstLaunch = true;
+
+        //protected override void OnBackgroundActivated(BackgroundActivatedEventArgs args)
+        //{
+        //    base.OnBackgroundActivated(args);
+
+        //    if (args.TaskInstance.TriggerDetails is AppServiceTriggerDetails details)
+        //    {
+        //        // only accept connections from callers in the same package
+        //        if (details.CallerPackageFamilyName == Package.Current.Id.FamilyName)
+        //        {
+        //            // connection established from the fulltrust process
+        //            AppServiceDeferral = args.TaskInstance.GetDeferral();
+        //            args.TaskInstance.Canceled += OnTaskCanceled;
+
+        //            Connection = details.AppServiceConnection;
+        //            AppServiceConnected?.Invoke(this, args.TaskInstance.TriggerDetails as AppServiceTriggerDetails);
+        //        }
+        //    }
+        //    //base.OnBackgroundActivated(args);
+        //    //IBackgroundTaskInstance taskInstance = args.TaskInstance;
+        //    //taskInstance.Canceled += OnTaskCanceled;
+
+        //    //AppServiceTriggerDetails appService = taskInstance.TriggerDetails as AppServiceTriggerDetails;
+        //    //_appServiceDeferral = taskInstance.GetDeferral();
+        //    //_appServiceConnection = appService.AppServiceConnection;
+        //    //_appServiceConnection.RequestReceived += ServiceConnection_RequestReceived;
+        //    //_appServiceConnection.ServiceClosed += AppServiceConnection_ServiceClosed;
+        //}
+        //private void OnTaskCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
+        //{
+        //    if (this._appServiceDeferral != null)
+        //    {
+        //        // Complete the service deferral.
+        //        this._appServiceDeferral.Complete();
+        //    }
+        //}
+        //private void AppServiceConnection_ServiceClosed(AppServiceConnection sender, AppServiceClosedEventArgs args)
+        //{
+        //    _appServiceDeferral.Complete();
+        //}
+        public static event EventHandler<AppServiceRequestReceivedEventArgs> AppServiceRequestReceived;
+        //private void ServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        //{
+        //    AppServiceDeferral messageDeferral = args.GetDeferral();
+        //    AppServiceRequestReceived?.Invoke(sender, args);
+        //    messageDeferral.Complete();
+        //}
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points

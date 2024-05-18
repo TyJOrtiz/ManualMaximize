@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Windows.ApplicationModel.AppService;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Controls;
@@ -58,18 +59,28 @@ namespace WindowHelper
             // within the app service provider to get this value.
             this.serviceConnection.PackageFamilyName = Windows.ApplicationModel.Package.Current.Id.FamilyName;
 
+            serviceConnection.ServiceClosed += Connection_ServiceClosed;
+            serviceConnection.RequestReceived += ServiceConnection_RequestReceived;
             var status = await this.serviceConnection.OpenAsync();
             Debug.WriteLine(Windows.ApplicationModel.Package.Current.Id.FamilyName);
             if (status != AppServiceConnectionStatus.Success)
             {
                 return;
             }
-            ValueSet valueSet = new ValueSet();
-            valueSet.Add("request", "ok");
+            //ValueSet valueSet = new ValueSet();
+            //valueSet.Add("request", "ok");
 
-            AppServiceResponse response = await serviceConnection.SendMessageAsync(valueSet);
-            serviceConnection.RequestReceived += ServiceConnection_RequestReceived;
+            //AppServiceResponse response = await serviceConnection.SendMessageAsync(valueSet);
         }
+        private void Connection_ServiceClosed(AppServiceConnection sender, AppServiceClosedEventArgs args)
+        {
+            // connection to the UWP lost, so we shut down the desktop process
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                Application.Current.Shutdown();
+            }));
+        }
+
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
