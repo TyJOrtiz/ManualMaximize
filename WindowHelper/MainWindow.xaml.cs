@@ -128,17 +128,48 @@ namespace WindowHelper
             public int right;
             public int bottom;
         }
+        private const int HTMAXBUTTON = 9;
+        private IntPtr HwndSourceHook(IntPtr hwnd)
+        {
+            return new IntPtr(HTMAXBUTTON);
+        }
+        public const int WM_NCHITTEST = 0x84; 
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        private const uint SC_MOVE = 0xF010;
+        private const uint WM_SYSCOMMAND = 0x0112;
+        [DllImport("user32.dll")]
+        static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y,
+           int nReserved, IntPtr hWnd, IntPtr prcRect);
 
+        [DllImport("user32.dll")]
+        public static extern IntPtr PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        uint TPM_LEFTALIGN = 0x0000;
+        uint TPM_RETURNCMD = 0x0100;
+        const UInt32 MF_ENABLED = 0x00000000;
+        const UInt32 MF_GRAYED = 0x00000001;
+        internal const UInt32 SC_MAXIMIZE = 0xF030;
+        internal const UInt32 SC_RESTORE = 0xF120;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+        [DllImport("user32.dll")]
+        static extern bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem,
+       uint uEnable);
+
+        [DllImport("user32.dll")]
+        static extern int TrackPopupMenuEx(IntPtr hmenu, uint fuFlags,
+          int x, int y, IntPtr hwnd, IntPtr lptpm);
         private async void ServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             var def = args.GetDeferral();
-            Debug.WriteLine("request is " + args.Request.Message["request"]);
-            Debug.WriteLine("hi");
+            //Debug.WriteLine("request is " + args.Request.Message["request"]);
+            //Debug.WriteLine("hi");
             string windowState = "";
             if ((string)args.Request.Message["request"] == "toggleState")
             {
                 IntPtr activeWindowHandle = GetForegroundWindow();
-
+                //Debug.WriteLine(activeWindowHandle);
                 if (activeWindowHandle != IntPtr.Zero)
                 {
                     // Get the window placement
@@ -182,7 +213,34 @@ namespace WindowHelper
                 {
                     // Minimize the active window
                     ShowWindow(activeWindowHandle, SW_MINIMIZE);
-                    Console.WriteLine("The active window has been minimized.");
+                    //Console.WriteLine("The active window has been minimized.");
+                    windowState = "showsnap";
+                }
+                else
+                {
+                    Console.WriteLine("No active window found.");
+                }
+            }
+            else if ((string)args.Request.Message["request"] == "showSnaps")
+            {
+                IntPtr activeWindowHandle = GetForegroundWindow();
+
+                if (activeWindowHandle != IntPtr.Zero)
+                {
+                    RECT pos;
+                    GetWindowRect(activeWindowHandle, out pos);
+                    IntPtr hMenu = GetSystemMenu(activeWindowHandle, false);
+
+                    int cmd = TrackPopupMenuEx(hMenu, 0x100 | 0x002, pos.left, pos.top, activeWindowHandle, IntPtr.Zero);
+                    if (cmd > 0) SendMessage(activeWindowHandle, 0x112, (IntPtr)cmd, IntPtr.Zero);
+                    // Minimize the active window
+                    //RECT pos;
+                    //GetWindowRect(activeWindowHandle, out pos);
+                    //IntPtr hMenu = GetSystemMenu(activeWindowHandle, false);
+                    //bool cmd = TrackPopupMenu(hMenu, 0x100, pos.left, pos.top, 0, activeWindowHandle, IntPtr.Zero);
+                    ////if (cmd)
+                    ////    SendMessage(activeWindowHandle, WM_SYSCOMMAND, (IntPtr)cmd, IntPtr.Zero);
+                    //Console.WriteLine("The active window has been minimized.");
                     windowState = "minimize";
                 }
                 else
@@ -246,5 +304,9 @@ namespace WindowHelper
             }
 
         }
+
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+
     }
 }

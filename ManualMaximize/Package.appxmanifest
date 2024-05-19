@@ -9,14 +9,14 @@
   IgnorableNamespaces="uap mp rescap">
 
   <Identity
-    Name="92e8142a-6e42-4763-a4a9-6126dbeafb10"
+    Name="TyJOrtiz.ACustomWindow"
     Publisher="CN=imthe"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="92e8142a-6e42-4763-a4a9-6126dbeafb10" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>ManualMaximize</DisplayName>
+    <DisplayName>ManualCustomWindow</DisplayName>
     <PublisherDisplayName>imthe</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -35,13 +35,13 @@
       EntryPoint="ManualMaximize.App">
 		
       <uap:VisualElements
-        DisplayName="ManualMaximize"
+        DisplayName="A Custom Window"
 		AppListEntry="none"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="ManualMaximize"
+        Description="A Custom Window using custom title decorations"
         BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>

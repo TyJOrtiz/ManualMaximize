@@ -60,11 +60,27 @@ namespace ManualMaximize
         public MainPage()
         {
             this.InitializeComponent();
+            ApplicationView.TerminateAppOnFinalViewClose = true;
 
             this.SizeChanged += MainPage_SizeChanged;
-
+            ApplicationView.GetForCurrentView().VisibleBoundsChanged += MainPage_VisibleBoundsChanged;
             //return;
             App.AppServiceRequestReceived += ServiceConnection_RequestReceived;
+        }
+
+        private void MainPage_VisibleBoundsChanged(ApplicationView sender, object args)
+        {
+            //Debug.WriteLine(ApplicationView.GetForCurrentView().IsFullScreenMode);
+            if (ApplicationView.GetForCurrentView().IsFullScreenMode)
+            {
+                ClickButton2.Visibility = Visibility.Collapsed;
+                FullScreenButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ClickButton2.Visibility = Visibility.Visible;
+                FullScreenButton.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -75,12 +91,12 @@ namespace ManualMaximize
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
             var size = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
 
-            Debug.WriteLine(bounds.Width * scaleFactor);
+            //Debug.WriteLine(bounds.Width * scaleFactor);
             //Debug.WriteLine(bounds.Bottom * scaleFactor);
             //Debug.WriteLine(48 * scaleFactor);
             //Debug.WriteLine(DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels);
-            var isTouchingTaskbar = Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven) == 48;
-            Debug.WriteLine($"Taskbar height is {Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven)}");
+            var isTouchingTaskbar = Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven) <= 48;
+            //Debug.WriteLine($"Taskbar height is {Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven)}");
             if (bounds.Top == 0 && isTouchingTaskbar && bounds.Width * scaleFactor == DisplayInformation.GetForCurrentView().ScreenWidthInRawPixels)
             {
 
@@ -110,7 +126,7 @@ namespace ManualMaximize
             navigationClient.TitleBarPreferredVisibilityMode = AppWindowTitleBarVisibility.AlwaysHidden;
             TitleBarHost.Visibility = Visibility.Visible;
             Window.Current.SetTitleBar(TitleBar);
-            ApplicationView.TerminateAppOnFinalViewClose = true;
+            Toggle.Toggled += ToggleSwitch_Toggled;
             CheckWindowSize();
         }
 
@@ -122,12 +138,12 @@ namespace ManualMaximize
             var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
             var size = new Size(bounds.Width * scaleFactor, bounds.Height * scaleFactor);
 
-            Debug.WriteLine(bounds.Width * scaleFactor);
+            //Debug.WriteLine(bounds.Width * scaleFactor);
             //Debug.WriteLine(bounds.Bottom * scaleFactor);
             //Debug.WriteLine(48 * scaleFactor);
             //Debug.WriteLine(DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels);
-            var isTouchingTaskbar = Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven) == 48;
-            Debug.WriteLine($"Taskbar height is {Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven)}");
+            var isTouchingTaskbar = Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven) <= 48;
+            //Debug.WriteLine($"Distance from bottom of screen is {Math.Round((DisplayInformation.GetForCurrentView().ScreenHeightInRawPixels - (bounds.Bottom * scaleFactor)) / scaleFactor, 0, MidpointRounding.ToEven)} pixels");
             if (bounds.Top == 0 && isTouchingTaskbar && bounds.Width * scaleFactor == DisplayInformation.GetForCurrentView().ScreenWidthInRawPixels)
             {
 
@@ -142,7 +158,7 @@ namespace ManualMaximize
 
         private void ServiceConnection_RequestReceived(object sender, AppServiceRequestReceivedEventArgs e)
         {
-            Debug.WriteLine(e.Request.Message.First());
+            //Debug.WriteLine(e.Request.Message.First());
             App.AppServiceRequestReceived -= ServiceConnection_RequestReceived;
         }
 
@@ -163,7 +179,7 @@ namespace ManualMaximize
 
         private void AppServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
-            Debug.WriteLine(args.Request.Message.First());
+            //Debug.WriteLine(args.Request.Message.First());
         }
 
         /// <summary>
@@ -192,7 +208,7 @@ namespace ManualMaximize
                 AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
                 if (response.Message.Any())
                 {
-                    Debug.WriteLine(response.Message.First());
+                    //Debug.WriteLine(response.Message.First());
                     switch (response.Message.First().Value.ToString())
                     {
                         case "maximize":
@@ -217,7 +233,7 @@ namespace ManualMaximize
                 AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
                 if (response.Message.Any())
                 {
-                    Debug.WriteLine(response.Message.First());
+                    //Debug.WriteLine(response.Message.First());
                 }
             //}
         }
@@ -238,6 +254,68 @@ namespace ManualMaximize
         private void Button_Click_3(object sender, RoutedEventArgs e)
         {
             MySplit.IsPaneOpen = !MySplit.IsPaneOpen;
+        }
+
+        private void FullScreenButton_Click(object sender, RoutedEventArgs e)
+        {
+            ApplicationView.GetForCurrentView().ExitFullScreenMode();
+        }
+
+        private void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (((ToggleSwitch)sender).IsOn)
+            {
+                var x = Window.Current.CoreWindow;
+                IInternalCoreWindowPhone internalCoreWindowPhone = (IInternalCoreWindowPhone)(object)x;
+                IApplicationWindowTitleBarNavigationClient navigationClient = (IApplicationWindowTitleBarNavigationClient)internalCoreWindowPhone.NavigationClient;
+                navigationClient.TitleBarPreferredVisibilityMode = AppWindowTitleBarVisibility.AlwaysHidden;
+                TitleBarHost.Visibility = Visibility.Visible;
+                Window.Current.SetTitleBar(TitleBar);
+            }
+            else
+            {
+                var x = Window.Current.CoreWindow;
+                IInternalCoreWindowPhone internalCoreWindowPhone = (IInternalCoreWindowPhone)(object)x;
+                IApplicationWindowTitleBarNavigationClient navigationClient = (IApplicationWindowTitleBarNavigationClient)internalCoreWindowPhone.NavigationClient;
+                navigationClient.TitleBarPreferredVisibilityMode = AppWindowTitleBarVisibility.Default;
+                TitleBarHost.Visibility = Visibility.Collapsed;
+                Window.Current.SetTitleBar(null);
+            }
+        }
+
+        private void ClickButton2_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            DispatcherTimer dispatcher = new DispatcherTimer();
+            dispatcher.Interval = TimeSpan.FromMilliseconds(1500);
+            pointerexited = (x, s) =>
+            {
+                dispatcher.Stop();
+                ((Button)sender).PointerExited -= pointerexited;
+            };
+
+            ((Button)sender).PointerExited += pointerexited;
+            dispatcher.Tick += Dispatcher_Tick;
+            dispatcher.Start();
+        }
+
+        private async void Dispatcher_Tick(object sender, object e)
+        {
+            ((DispatcherTimer)sender).Stop();
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "showSnaps");
+            //((Button)sender).PointerExited -= pointerexited;
+
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            if (response.Message.Any())
+            {
+                //Debug.WriteLine(response.Message.First());
+            }
+        }
+
+        public event PointerEventHandler pointerexited;
+        private void MainPage_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }
