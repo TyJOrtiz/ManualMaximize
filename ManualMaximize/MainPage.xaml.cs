@@ -152,7 +152,7 @@ namespace ManualMaximize
             App.AppServiceDisconnected += MainPage_AppServiceDisconnected;
             if (ApiInformation.IsApiContractPresent("Windows.ApplicationModel.FullTrustAppContract", 1, 0))
             {
-                await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
+                await Windows.ApplicationModel.FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
             }
         }
         private void MainPage_AppServiceConnected(object sender, AppServiceTriggerDetails e)
