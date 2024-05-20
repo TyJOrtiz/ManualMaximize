@@ -36,7 +36,7 @@
                    Margin="48,0,0,0"/>
             </Grid>
             <StackPanel Visibility="Collapsed" Spacing="12" Margin="24,16" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-                <Button Height="16"  Click="Button_Click_2" Width="16" FontSize="10">&#xE10A;
+                <Button Height="16"  Click="Button_Click_2" IsTabStop="False" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE10A;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -113,7 +113,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Height="16"  Click="Button_Click2" Width="16" FontSize="10">&#xE921;
+                <Button Height="16"  Click="Button_Click2" IsTabStop="False" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE921;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -190,7 +190,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Height="16" Click="Button_Click" Width="16" FontSize="10">&#xE710;
+                <Button Height="16" Click="Button_Click" IsTabStop="False" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE710;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -272,7 +272,7 @@
                 </Button>
             </StackPanel>
             <StackPanel Visibility="Visible" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
-                <Button x:Name="ClickButton" Click="Button_Click2" Height="48" Width="48" FontSize="10">&#xE921;
+                <Button x:Name="ClickButton" IsTabStop="False" IsFocusEngagementEnabled="False" Click="Button_Click2" Height="48" Width="48" FontSize="10">&#xE921;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -343,7 +343,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button x:Name="ClickButton2" Click="Button_Click" PointerEntered="ClickButton2_PointerEntered" Visibility="Visible" Height="48" Width="48" FontSize="10">&#xE922;
+                <Button x:Name="ClickButton2" IsTabStop="False" IsFocusEngagementEnabled="False" Click="Button_Click" PointerEntered="ClickButton2_PointerEntered" Visibility="Visible" Height="48" Width="48" FontSize="10">&#xE922;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -414,7 +414,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Height="48" x:Name="FullScreenButton" Visibility="Collapsed" Click="FullScreenButton_Click" Width="48" FontSize="10">&#xE73F;
+                <Button Height="48" IsTabStop="False" x:Name="FullScreenButton" IsFocusEngagementEnabled="False" Visibility="Collapsed" Click="FullScreenButton_Click" Width="48" FontSize="10">&#xE73F;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -485,7 +485,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Width="48" Height="48"  Content="&#xE10A;" Click="Button_Click_2">
+                <Button Width="48" Height="48" IsTabStop="False" IsFocusEngagementEnabled="False" Content="&#xE10A;" Click="Button_Click_2">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>

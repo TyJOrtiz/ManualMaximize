@@ -261,6 +261,7 @@ namespace ManualMaximize
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
         }
 
+
         private void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
         {
             if (((ToggleSwitch)sender).IsOn)
