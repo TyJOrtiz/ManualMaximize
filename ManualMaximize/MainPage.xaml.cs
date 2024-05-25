@@ -42,6 +42,19 @@ namespace ManualMaximize
 
         public AppWindow AppWindow { get; private set; }
 
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        // Constants for ShowWindow function
+        private const int SW_MAXIMIZE = 3;
+
+        // Constants for ShowWindow function
+        private const int SW_RESTORE = 9;
+
+
+        private const int SW_MINIMIZE = 6;
         /// <summary>
         /// CoreWindowInterop (thanks to AhmedWalid @AhmedWalid605 on Twitter)
         /// </summary>
@@ -51,6 +64,12 @@ namespace ManualMaximize
         {
             object NavigationClient { [return: MarshalAs(UnmanagedType.IUnknown)] get; [param: MarshalAs(UnmanagedType.IUnknown)] set; }
         }
+        //[ComImport, InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
+        //[System.Runtime.InteropServices.Guid("7a5b6fd1-cd73-4b6c-9cf4-2e869eaf470a")]
+        //interface ICoreWindowAdapterInterop
+        //{
+        //    object TitleBarClientAdapter { [return: MarshalAs(UnmanagedType.IUnknown)] get; [param: MarshalAs(UnmanagedType.IUnknown)] set; }
+        //}
         [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [System.Runtime.InteropServices.Guid("a257681d-5cdd-401c-89f0-cba89ca8a39e")]
         interface IApplicationWindowTitleBarNavigationClient
@@ -202,8 +221,27 @@ namespace ManualMaximize
 
             //if (App._appServiceConnection != null)
             //{
+            //ValueSet valueSet1 = new ValueSet();
+            //valueSet1.Add("request", "getWindowHandle");
+
+            //AppServiceResponse response1 = await App.Connection.SendMessageAsync(valueSet1);
+            //if (response1.Message.Any())
+            //{
+            //    Debug.WriteLine(response1.Message.First().Value);
+            //    IntPtr y = new IntPtr((int)response1.Message.First().Value);
+            //    try
+            //    {
+            //        ShowWindow(y, SW_MAXIMIZE);
+            //    }
+            //    catch
+            //    {
+
+            //    }
+            //}
+            /*return*/
                 ValueSet valueSet = new ValueSet();
                 valueSet.Add("request", "toggleState");
+                valueSet.Add("handle", App.MainHandle.ToInt32());
 
                 AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
                 if (response.Message.Any())
@@ -229,8 +267,9 @@ namespace ManualMaximize
             //{
                 ValueSet valueSet = new ValueSet();
                 valueSet.Add("request", "minimize");
+                valueSet.Add("handle", App.MainHandle.ToInt32());
 
-                AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
                 if (response.Message.Any())
                 {
                     //Debug.WriteLine(response.Message.First());
@@ -317,6 +356,31 @@ namespace ManualMaximize
         private void MainPage_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             throw new NotImplementedException();
+        }
+
+        private async void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "requestPin");
+            valueSet.Add("handle", App.MainHandle.ToInt32());
+
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            if (response.Message.Any())
+            {
+                Debug.WriteLine(response.Message.First());
+                switch (response.Message.First().Value.ToString())
+                {
+                    case "pinned":
+
+                        ((Button)sender).Content = "\uE77A";
+                        break;
+                    case "unpinned":
+
+                        ((Button)sender).Content = "\uE718";
+                        break;
+                }
+
+            }
         }
     }
 }

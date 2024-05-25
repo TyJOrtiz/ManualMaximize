@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -27,6 +28,9 @@ namespace ManualMaximize
     /// </summary>
     sealed partial class App : Application
     {
+        public static ViewModel AppViewModel { get; private set; }
+        public static IntPtr MainHandle { get; set; } = new IntPtr(-1);
+
         public static BackgroundTaskDeferral AppServiceDeferral = null;
         public static AppServiceConnection Connection = null;
         public static event EventHandler AppServiceDisconnected;
@@ -38,7 +42,15 @@ namespace ManualMaximize
         public App()
         {
             this.InitializeComponent();
+            AppViewModel = new ViewModel();
             this.Suspending += OnSuspending;
+        }
+        [ComImport, System.Runtime.InteropServices.Guid("45D64A29-A63E-4CB6-B498-5781D298CB4F")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        interface ICoreWindowInterop
+        {
+            IntPtr WindowHandle { get; }
+            bool MessageHandled { set; }
         }
         protected override void OnBackgroundActivated(BackgroundActivatedEventArgs args)
         {
@@ -149,6 +161,10 @@ namespace ManualMaximize
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
+                dynamic corewin = Window.Current.CoreWindow;
+                var interop = (ICoreWindowInterop)corewin;
+                var handle = interop.WindowHandle;
+                MainHandle = handle;
             }
 
             if (e.PrelaunchActivated == false)

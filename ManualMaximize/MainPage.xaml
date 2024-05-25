@@ -9,10 +9,13 @@
     Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
     <Grid>
-        <SplitView x:Name="MySplit" DisplayMode="Inline" Visibility="Collapsed" IsPaneOpen="False" PaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}">
+        <SplitView x:Name="MySplit" DisplayMode="Inline" Visibility="Visible" IsPaneOpen="False" PaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}">
             <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                <StackPanel VerticalAlignment="Center" Visibility="Collapsed" HorizontalAlignment="Center">
+                <StackPanel VerticalAlignment="Center" Visibility="Visible" HorizontalAlignment="Center">
                     <ToggleSwitch IsOn="True" x:Name="Toggle" Header="Custom Title bar buttons"></ToggleSwitch>
+                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.MinimizeButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Minimize button"></ToggleSwitch>
+                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.MaximizeButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Maximize/Restore button"></ToggleSwitch>
+                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.CloseButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Close button"></ToggleSwitch>
                 </StackPanel>
             </Grid>
         </SplitView>
@@ -23,20 +26,23 @@
                     <ColumnDefinition/>
                     <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
                 </Grid.ColumnDefinitions>
-                <Image Source="Assets/StoreLogo.png" 
-               Grid.Column="1"
-               HorizontalAlignment="Left"
-               Width="16" Height="16"
-               Margin="16,0"/>
-                <TextBlock x:Name="AppTitleTextBlock"
-                   Text="A Custom Window" 
-                   Style="{StaticResource CaptionTextBlockStyle}" 
-                   Grid.Column="1"
-                   VerticalAlignment="Center"
-                   Margin="48,0,0,0"/>
+                <StackPanel Orientation="Horizontal" Spacing="16" Grid.Column="1">
+                    <Image Visibility="Collapsed" Source="Assets/StoreLogo.png"
+Grid.Column="1"
+HorizontalAlignment="Left"
+Width="16" Height="16"
+Margin="16,0,0,0"/>
+                    <TextBlock x:Name="AppTitleTextBlock"
+    Text="A Custom Window" 
+    Style="{StaticResource CaptionTextBlockStyle}" 
+    Grid.Column="1"
+    VerticalAlignment="Center"
+    Margin="0,0,0,0"/>
+                </StackPanel>
+                
             </Grid>
             <StackPanel Visibility="Collapsed" Spacing="12" Margin="24,16" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-                <Button Height="16"  Click="Button_Click_2" IsTabStop="False" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE10A;
+                <Button Height="16"  Click="Button_Click_2" IsTabStop="False" Visibility="{x:Bind local:App.AppViewModel.MinimizeButtonVisible, Mode=OneWay}" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE10A;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -190,11 +196,95 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Height="16" Click="Button_Click" IsTabStop="False" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE710;
+                <Grid Visibility="{x:Bind local:App.AppViewModel.MaximizeButtonVisible, Mode=OneWay}">
+                    <Button Height="16" Click="Button_Click" IsTabStop="False" IsFocusEngagementEnabled="False" Width="16" FontSize="10">&#xE710;
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="1"/>
+                                <Setter Property="HorizontalAlignment" Value="Left"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}"/>
+                                <Setter Property="FontWeight" Value="Normal"/>
+                                <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
+                                <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}"/>
+                                <Setter Property="FocusVisualMargin" Value="-3"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <ContentPresenter x:Name="ContentPresenter"
+    AutomationProperties.AccessibilityView="Raw"
+    BackgroundSizing="{TemplateBinding BackgroundSizing}"
+    Background="#33c748"
+    Foreground="#33c748" CornerRadius="99"
+    BorderThickness="1"
+    BorderBrush="#27aa35"
+    ContentTemplate="{TemplateBinding ContentTemplate}"
+    Content="{TemplateBinding Content}"
+    ContentTransitions="{TemplateBinding ContentTransitions}"
+    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+    Padding="{TemplateBinding Padding}"
+    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                                                <ContentPresenter.BackgroundTransition>
+                                                    <BrushTransition Duration="0:0:0.100"></BrushTransition>
+                                                </ContentPresenter.BackgroundTransition>
+                                                <VisualStateManager.VisualStateGroups>
+                                                    <VisualStateGroup x:Name="CommonStates">
+                                                        <VisualState x:Name="Normal">
+                                                            <!--<Storyboard>
+                                -->
+                                                            <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
+                                                            <!--
+                            </Storyboard>-->
+                                                        </VisualState>
+                                                        <VisualState x:Name="PointerOver">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="#33c748"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="#0b650d"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
+                                                            </Storyboard>
+                                                        </VisualState>
+                                                        <VisualState x:Name="Pressed">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="#269636"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="#023002"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="#2b983b"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderThickness">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="2"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <!--<PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
+                                                            </Storyboard>
+                                                        </VisualState>
+                                                    </VisualStateGroup>
+                                                </VisualStateManager.VisualStateGroups>
+                                            </ContentPresenter>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+                <Button Background="Transparent" Margin="12,0" BorderBrush="Transparent" Click="Button_Click_3" Visibility="{x:Bind local:App.AppViewModel.CloseButtonVisible, Mode=OneWay}">
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE90C;" />
+                </Button>
+            </StackPanel>
+            <StackPanel Visibility="Visible" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
+                <Button Height="48" Width="48" Content="&#xE718;" Click="Button_Click_1">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Padding" Value="1"/>
+                            <Setter Property="Padding" Value="4"/>
                             <Setter Property="HorizontalAlignment" Value="Left"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}"/>
@@ -208,12 +298,12 @@
                                         <ContentPresenter x:Name="ContentPresenter"
     AutomationProperties.AccessibilityView="Raw"
     BackgroundSizing="{TemplateBinding BackgroundSizing}"
-    Background="#33c748"
-    Foreground="#33c748" CornerRadius="99"
-    BorderThickness="1"
-    BorderBrush="#27aa35"
+    Background="#00c42b1c"
+    BorderThickness="{TemplateBinding BorderThickness}"
+    BorderBrush="{TemplateBinding BorderBrush}"
     ContentTemplate="{TemplateBinding ContentTemplate}"
     Content="{TemplateBinding Content}"
+                                  CornerRadius="0"
     ContentTransitions="{TemplateBinding ContentTransitions}"
     HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
     Padding="{TemplateBinding Padding}"
@@ -233,10 +323,10 @@
                                                     <VisualState x:Name="PointerOver">
                                                         <Storyboard>
                                                             <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#33c748"/>
+                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColor}"/>
                                                             </ObjectAnimationUsingKeyFrames>
                                                             <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#0b650d"/>
+                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="White"/>
                                                             </ObjectAnimationUsingKeyFrames>
                                                             <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
                                                         </Storyboard>
@@ -244,16 +334,10 @@
                                                     <VisualState x:Name="Pressed">
                                                         <Storyboard>
                                                             <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#269636"/>
+                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColorDark1}"/>
                                                             </ObjectAnimationUsingKeyFrames>
                                                             <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#023002"/>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#2b983b"/>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderThickness">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="2"/>
+                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#CCFFFFFF"/>
                                                             </ObjectAnimationUsingKeyFrames>
                                                             <!--<PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
                                                         </Storyboard>
@@ -267,12 +351,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Background="Transparent" Margin="12,0" BorderBrush="Transparent" Click="Button_Click_3">
-                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE90C;" />
-                </Button>
-            </StackPanel>
-            <StackPanel Visibility="Visible" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
-                <Button x:Name="ClickButton" IsTabStop="False" IsFocusEngagementEnabled="False" Click="Button_Click2" Height="48" Width="48" FontSize="10">&#xE921;
+                <Button x:Name="ClickButton" IsTabStop="False" Visibility="{x:Bind local:App.AppViewModel.MinimizeButtonVisible, Mode=OneWay}" IsFocusEngagementEnabled="False" Click="Button_Click2" Height="48" Width="48" FontSize="10">&#xE921;
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -343,22 +422,23 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button x:Name="ClickButton2" IsTabStop="False" IsFocusEngagementEnabled="False" Click="Button_Click" PointerEntered="ClickButton2_PointerEntered" Visibility="Visible" Height="48" Width="48" FontSize="10">&#xE922;
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Padding" Value="4"/>
-                            <Setter Property="HorizontalAlignment" Value="Left"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}"/>
-                            <Setter Property="FontWeight" Value="Normal"/>
-                            <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
-                            <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}"/>
-                            <Setter Property="FocusVisualMargin" Value="-3"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <ContentPresenter x:Name="ContentPresenter"
+                <Grid Visibility="{x:Bind local:App.AppViewModel.MaximizeButtonVisible, Mode=OneWay}">
+                    <Button x:Name="ClickButton2" IsTabStop="False" IsFocusEngagementEnabled="False" Click="Button_Click" PointerEntered="ClickButton2_PointerEntered" Visibility="Visible" Height="48" Width="48" FontSize="10">&#xE922;
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="4"/>
+                                <Setter Property="HorizontalAlignment" Value="Left"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}"/>
+                                <Setter Property="FontWeight" Value="Normal"/>
+                                <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
+                                <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}"/>
+                                <Setter Property="FocusVisualMargin" Value="-3"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <ContentPresenter x:Name="ContentPresenter"
                         AutomationProperties.AccessibilityView="Raw"
                         BackgroundSizing="{TemplateBinding BackgroundSizing}"
                         Background="#00c42b1c"
@@ -371,49 +451,50 @@
                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                         Padding="{TemplateBinding Padding}"
                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                                            <ContentPresenter.BackgroundTransition>
-                                                <BrushTransition Duration="0:0:0.100"></BrushTransition>
-                                            </ContentPresenter.BackgroundTransition>
-                                            <VisualStateManager.VisualStateGroups>
-                                                <VisualStateGroup x:Name="CommonStates">
-                                                    <VisualState x:Name="Normal">
-                                                        <!--<Storyboard>
+                                                <ContentPresenter.BackgroundTransition>
+                                                    <BrushTransition Duration="0:0:0.100"></BrushTransition>
+                                                </ContentPresenter.BackgroundTransition>
+                                                <VisualStateManager.VisualStateGroups>
+                                                    <VisualStateGroup x:Name="CommonStates">
+                                                        <VisualState x:Name="Normal">
+                                                            <!--<Storyboard>
                                                     -->
-                                                        <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
-                                                        <!--
-                                                </Storyboard>-->
-                                                    </VisualState>
-                                                    <VisualState x:Name="PointerOver">
-                                                        <Storyboard>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColor}"/>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="White"/>
-                                                            </ObjectAnimationUsingKeyFrames>
                                                             <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
-                                                        </Storyboard>
-                                                    </VisualState>
-                                                    <VisualState x:Name="Pressed">
-                                                        <Storyboard>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColorDark1}"/>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                                <DiscreteObjectKeyFrame KeyTime="0" Value="#CCFFFFFF"/>
-                                                            </ObjectAnimationUsingKeyFrames>
-                                                            <!--<PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
-                                                        </Storyboard>
-                                                    </VisualState>
-                                                </VisualStateGroup>
-                                            </VisualStateManager.VisualStateGroups>
-                                        </ContentPresenter>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                                                            <!--
+                                                </Storyboard>-->
+                                                        </VisualState>
+                                                        <VisualState x:Name="PointerOver">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColor}"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="White"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
+                                                            </Storyboard>
+                                                        </VisualState>
+                                                        <VisualState x:Name="Pressed">
+                                                            <Storyboard>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColorDark1}"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="#CCFFFFFF"/>
+                                                                </ObjectAnimationUsingKeyFrames>
+                                                                <!--<PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
+                                                            </Storyboard>
+                                                        </VisualState>
+                                                    </VisualStateGroup>
+                                                </VisualStateManager.VisualStateGroups>
+                                            </ContentPresenter>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
                 <Button Height="48" IsTabStop="False" x:Name="FullScreenButton" IsFocusEngagementEnabled="False" Visibility="Collapsed" Click="FullScreenButton_Click" Width="48" FontSize="10">&#xE73F;
                     <Button.Style>
                         <Style TargetType="Button">
@@ -485,7 +566,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Width="48" Height="48" IsTabStop="False" IsFocusEngagementEnabled="False" Content="&#xE10A;" Click="Button_Click_2">
+                <Button Width="48" Height="48" IsTabStop="False" Visibility="{x:Bind local:App.AppViewModel.CloseButtonVisible, Mode=OneWay}" IsFocusEngagementEnabled="False" Content="&#xE10A;" Click="Button_Click_2">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="BorderThickness" Value="0"/>

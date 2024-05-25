@@ -141,7 +141,20 @@ namespace WindowHelper
         [DllImport("user32.dll")]
         static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y,
            int nReserved, IntPtr hWnd, IntPtr prcRect);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
+        //Add the needed const
+        const int GWL_EXSTYLE = (-20);
+        const UInt32 WS_EX_TOPMOST = 0x0008;
+        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+        private const UInt32 SWP_NOSIZE = 0x0001;
+        private const UInt32 SWP_NOMOVE = 0x0002;
+        private const UInt32 TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
         [DllImport("user32.dll")]
         public static extern IntPtr PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
         uint TPM_LEFTALIGN = 0x0000;
@@ -158,6 +171,14 @@ namespace WindowHelper
        uint uEnable);
 
         [DllImport("user32.dll")]
+  private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        private const int GWL_STYLE = -16;
+        private const int WS_SYSMENU = 0x80000;
+        private const int WS_MAXIMIZEBOX = 0x10000; //maximize button
+        private const int WS_MINIMIZEBOX = 0x20000; //minimize button
+
+        [DllImport("user32.dll")]
         static extern int TrackPopupMenuEx(IntPtr hmenu, uint fuFlags,
           int x, int y, IntPtr hwnd, IntPtr lptpm);
         private async void ServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
@@ -166,9 +187,13 @@ namespace WindowHelper
             //Debug.WriteLine("request is " + args.Request.Message["request"]);
             //Debug.WriteLine("hi");
             string windowState = "";
+            var activeWindowHandle = GetForegroundWindow();
+            //    new IntPtr((int)args.Request.Message.First().Value);
+            //Debug.WriteLine(activeWindowHandle);
+            //Debug.WriteLine(GetForegroundWindow());
             if ((string)args.Request.Message["request"] == "toggleState")
             {
-                IntPtr activeWindowHandle = GetForegroundWindow();
+                //IntPtr activeWindowHandle = GetForegroundWindow();
                 //Debug.WriteLine(activeWindowHandle);
                 if (activeWindowHandle != IntPtr.Zero)
                 {
@@ -205,9 +230,82 @@ namespace WindowHelper
                     Console.WriteLine("No active window found.");
                 }
             }
+            else if ((string)args.Request.Message["request"] == "getWindowHandle")
+            {
+                //IntPtr activeWindowHandle = GetForegroundWindow();
+
+                var x = new ValueSet();
+                x.Add("response", activeWindowHandle.ToInt32());
+                try
+                {
+                    await args.Request.SendResponseAsync(x);
+                }
+                catch
+                {
+
+                }
+                finally
+                {
+                    def.Complete();
+                }
+                return;
+            }
+            else if ((string)args.Request.Message["request"] == "requestPin")
+            {
+                //IntPtr activeWindowHandle = GetForegroundWindow();
+
+
+                if (activeWindowHandle != IntPtr.Zero)
+                {
+                    int dwExStyle = GetWindowLong(activeWindowHandle, GWL_EXSTYLE);
+
+                    string isTopMost = "No";
+                    
+                    if ((dwExStyle & WS_EX_TOPMOST) != 0)
+                    {
+                        SetWindowPos(activeWindowHandle, HWND_NOTOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
+                        windowState = "unpinned";
+                    }
+                    // Minimize the active window
+                    else
+                    {
+                        SetWindowPos(activeWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
+                        windowState = "pinned";
+                    }
+                    Console.WriteLine("The active window has been minimized.");
+                    //windowState = "pinned";
+                }
+                else
+                {
+                    Console.WriteLine("No active window found.");
+                }
+            }
+            else if (args.Request.Message["request"] is bool value1)
+            {
+                //IntPtr activeWindowHandle = GetForegroundWindow();
+
+
+                if (activeWindowHandle != IntPtr.Zero)
+                {
+                    const long WS_MINIMIZEBOX = 0x00020000L;
+                    const long WS_MAXIMIZEBOX = 0x00010000L;
+
+                    long value = GetWindowLong(activeWindowHandle, GWL_STYLE);
+                    if (value1 == true)
+                    {
+                        SetWindowLong(activeWindowHandle, GWL_STYLE, (int)(value & ~WS_MINIMIZEBOX & ~WS_MAXIMIZEBOX));
+                        windowState = "disabled";
+                    }
+                    else
+                    {
+                        SetWindowLong(activeWindowHandle, GWL_STYLE, (int)(value & WS_MINIMIZEBOX & WS_MAXIMIZEBOX));
+                        windowState = "enabled";
+                    }
+                }
+            }
             else if ((string)args.Request.Message["request"] == "minimize")
             {
-                IntPtr activeWindowHandle = GetForegroundWindow();
+                //IntPtr activeWindowHandle = GetForegroundWindow();
 
                 if (activeWindowHandle != IntPtr.Zero)
                 {
@@ -223,7 +321,7 @@ namespace WindowHelper
             }
             else if ((string)args.Request.Message["request"] == "showSnaps")
             {
-                IntPtr activeWindowHandle = GetForegroundWindow();
+                //IntPtr activeWindowHandle = GetForegroundWindow();
 
                 if (activeWindowHandle != IntPtr.Zero)
                 {
@@ -251,7 +349,7 @@ namespace WindowHelper
             else
             if ((string)args.Request.Message["request"] == "checkState")
             {
-                IntPtr activeWindowHandle = GetForegroundWindow();
+                //IntPtr activeWindowHandle = GetForegroundWindow();
 
                 if (activeWindowHandle != IntPtr.Zero)
                 {
