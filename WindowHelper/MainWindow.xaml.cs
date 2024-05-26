@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using System.Windows.Threading;
 using Windows.ApplicationModel.AppService;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Controls;
+using Control = System.Windows.Controls.Control;
 
 namespace WindowHelper
 {
@@ -39,6 +41,14 @@ namespace WindowHelper
             var process = Process.GetProcesses().Where(x => x.ProcessName == "ManualMaximize");
             if (process != null && process.Any())
             {
+                try
+                {
+                    Debug.WriteLine(process.FirstOrDefault().MainWindowHandle);
+                }
+                catch
+                {
+
+                }
                 process.FirstOrDefault().EnableRaisingEvents = true;
                 process.FirstOrDefault().Exited += Process_Exited;
                 //process.SingleOrDefault()?. += Process_Exited;
@@ -134,12 +144,12 @@ namespace WindowHelper
             return new IntPtr(HTMAXBUTTON);
         }
         public const int WM_NCHITTEST = 0x84; 
-        [DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        //[DllImport("user32.dll")]
+        //private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
         private const uint SC_MOVE = 0xF010;
         private const uint WM_SYSCOMMAND = 0x0112;
         [DllImport("user32.dll")]
-        static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y,
+        static extern bool TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y,
            int nReserved, IntPtr hWnd, IntPtr prcRect);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -177,10 +187,83 @@ namespace WindowHelper
         private const int WS_SYSMENU = 0x80000;
         private const int WS_MAXIMIZEBOX = 0x10000; //maximize button
         private const int WS_MINIMIZEBOX = 0x20000; //minimize button
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        public static void OpenSystemMenu()
+        {
+            IntPtr hWnd = GetForegroundWindow();
+            SendMessage(hWnd, WM_SYSCOMMAND, (IntPtr)SC_KEYMENU, (IntPtr)32);
+        }
+        //public const int WM_SYSCOMMAND = 0x0112;
+        public const int SC_KEYMENU = 0xF100;
+        public const uint SWP_NOZORDER = 0x0004;
+        public const uint SWP_FRAMECHANGED = 0x0020;
+        public const uint WS_CAPTION = 0x00C0;
+        [DllImport("user32.dll")]
+        private static extern uint TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, IntPtr hWnd, IntPtr lptpm);
+
 
         [DllImport("user32.dll")]
-        static extern int TrackPopupMenuEx(IntPtr hmenu, uint fuFlags,
-          int x, int y, IntPtr hwnd, IntPtr lptpm);
+        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+        [DllImport("user32.dll")]
+        private static extern bool DestroyMenu(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+        public static void ShowContextMenu(IntPtr appWindow, IntPtr myWindow, Point point)
+        {
+            const int MF_BYCOMMAND = 0x00000000;
+            const uint TPM_LEFTBUTTON = 0x0000;
+            const uint TPM_RETURNCMD = 0x0100;
+            const uint SC_MOVE = 0xF010;
+            const uint SC_SIZE = 0xF000;
+            IntPtr wMenu = GetSystemMenu(appWindow, false);
+            WINDOWPLACEMENT placement2 = new WINDOWPLACEMENT();
+            placement2.length = Marshal.SizeOf(placement2);
+
+            if (GetWindowPlacement(appWindow, ref placement2))
+            {
+                //if (maximized)
+                //{
+                //    EnableMenuItem(wMenu, SC_MAXIMIZE, MF_BYCOMMAND | 0x00000001); // Disable Maximize
+                //    EnableMenuItem(wMenu, SC_RESTORE, MF_BYCOMMAND | 0x00000000);  // Enable Restore
+                //}
+                //else
+                //{
+                //    EnableMenuItem(wMenu, SC_MAXIMIZE, MF_BYCOMMAND | 0x00000000); // Enable Maximize
+                //    EnableMenuItem(wMenu, SC_RESTORE, MF_BYCOMMAND | 0x00000001);  // Disable Restore
+                //}
+                // Check if the window is maximized
+                if (placement2.showCmd == SW_MAXIMIZE)
+                {
+                    EnableMenuItem(wMenu, SC_MAXIMIZE, MF_BYCOMMAND | 0x00000001);
+                    EnableMenuItem(wMenu, SC_SIZE, MF_BYCOMMAND | 0x00000001);
+                    EnableMenuItem(wMenu, SC_MOVE, MF_BYCOMMAND | 0x00000001); // Disable Maximize
+                    EnableMenuItem(wMenu, SC_RESTORE, MF_BYCOMMAND | 0x00000000);  // Enable Restore
+                }
+                else
+                {
+                    EnableMenuItem(wMenu, SC_MAXIMIZE, MF_BYCOMMAND | 0x00000000);
+                    EnableMenuItem(wMenu, SC_SIZE, MF_BYCOMMAND | 0x00000000);
+                    EnableMenuItem(wMenu, SC_MOVE, MF_BYCOMMAND | 0x00000000); // Enable Maximize
+                    EnableMenuItem(wMenu, SC_RESTORE, MF_BYCOMMAND | 0x00000001);
+
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to get window placement.");
+            }
+            // Display the menu
+            SetForegroundWindow(myWindow);
+            uint command = TrackPopupMenuEx(wMenu,
+                TPM_LEFTBUTTON | TPM_RETURNCMD | 0x0080, (int)point.X, (int)point.Y, myWindow, IntPtr.Zero);
+            if (command == 0)
+                return;
+            PostMessage(appWindow, WM_SYSCOMMAND, new IntPtr(command), IntPtr.Zero);
+        }
         private async void ServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             var def = args.GetDeferral();
@@ -188,6 +271,16 @@ namespace WindowHelper
             //Debug.WriteLine("hi");
             string windowState = "";
             var activeWindowHandle = GetForegroundWindow();
+
+            // Get the cursor position
+            //GetCursorPos(out POINT cursorPos);
+
+            //// Show the system menu at the cursor position
+            //TrackPopupMenuEx(hMenu2, TPM_LEFTALIGN | TPM_RETURNCMD, cursorPos.x, cursorPos.y, activeWindowHandle, IntPtr.Zero);
+            //SetWindowLong(activeWindowHandle, GWL_STYLE, style);
+            //SetWindowPos(activeWindowHandle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+            //OpenSystemMenu();
+
             //    new IntPtr((int)args.Request.Message.First().Value);
             //Debug.WriteLine(activeWindowHandle);
             //Debug.WriteLine(GetForegroundWindow());
@@ -230,6 +323,16 @@ namespace WindowHelper
                     Console.WriteLine("No active window found.");
                 }
             }
+            else if ((string)args.Request.Message["request"] == "showSystemMenu")
+            {
+                //var v = GetCursorPos(out POINT cursorPos);
+                //this.Dispatcher.Invoke(() =>
+                //{
+                //    ShowContextMenu(activeWindowHandle, new System.Windows.Interop.WindowInteropHelper(Application.Current.MainWindow).Handle, new Point(cursorPos.x, cursorPos.y));
+                //});
+                OpenSystemMenu();
+                windowState = "shown";
+            }
             else if ((string)args.Request.Message["request"] == "getWindowHandle")
             {
                 //IntPtr activeWindowHandle = GetForegroundWindow();
@@ -260,7 +363,7 @@ namespace WindowHelper
                     int dwExStyle = GetWindowLong(activeWindowHandle, GWL_EXSTYLE);
 
                     string isTopMost = "No";
-                    
+
                     if ((dwExStyle & WS_EX_TOPMOST) != 0)
                     {
                         SetWindowPos(activeWindowHandle, HWND_NOTOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
@@ -319,35 +422,34 @@ namespace WindowHelper
                     Console.WriteLine("No active window found.");
                 }
             }
-            else if ((string)args.Request.Message["request"] == "showSnaps")
-            {
-                //IntPtr activeWindowHandle = GetForegroundWindow();
+            //else if ((string)args.Request.Message["request"] == "showSnaps")
+            //{
+            //    //IntPtr activeWindowHandle = GetForegroundWindow();
 
-                if (activeWindowHandle != IntPtr.Zero)
-                {
-                    RECT pos;
-                    GetWindowRect(activeWindowHandle, out pos);
-                    IntPtr hMenu = GetSystemMenu(activeWindowHandle, false);
+            //    if (activeWindowHandle != IntPtr.Zero)
+            //    {
+            //        RECT pos;
+            //        GetWindowRect(activeWindowHandle, out pos);
+            //        IntPtr hMenu = GetSystemMenu(activeWindowHandle, false);
 
-                    int cmd = TrackPopupMenuEx(hMenu, 0x100 | 0x002, pos.left, pos.top, activeWindowHandle, IntPtr.Zero);
-                    if (cmd > 0) SendMessage(activeWindowHandle, 0x112, (IntPtr)cmd, IntPtr.Zero);
-                    // Minimize the active window
-                    //RECT pos;
-                    //GetWindowRect(activeWindowHandle, out pos);
-                    //IntPtr hMenu = GetSystemMenu(activeWindowHandle, false);
-                    //bool cmd = TrackPopupMenu(hMenu, 0x100, pos.left, pos.top, 0, activeWindowHandle, IntPtr.Zero);
-                    ////if (cmd)
-                    ////    SendMessage(activeWindowHandle, WM_SYSCOMMAND, (IntPtr)cmd, IntPtr.Zero);
-                    //Console.WriteLine("The active window has been minimized.");
-                    windowState = "minimize";
-                }
-                else
-                {
-                    Console.WriteLine("No active window found.");
-                }
-            }
-            else
-            if ((string)args.Request.Message["request"] == "checkState")
+            //        int cmd = TrackPopupMenuEx(hMenu, 0x100 | 0x002, pos.left, pos.top, activeWindowHandle, IntPtr.Zero);
+            //        if (cmd > 0) SendMessage(activeWindowHandle, 0x112, (IntPtr)cmd, IntPtr.Zero);
+            //        // Minimize the active window
+            //        //RECT pos;
+            //        //GetWindowRect(activeWindowHandle, out pos);
+            //        //IntPtr hMenu = GetSystemMenu(activeWindowHandle, false);
+            //        //bool cmd = TrackPopupMenu(hMenu, 0x100, pos.left, pos.top, 0, activeWindowHandle, IntPtr.Zero);
+            //        ////if (cmd)
+            //        ////    SendMessage(activeWindowHandle, WM_SYSCOMMAND, (IntPtr)cmd, IntPtr.Zero);
+            //        //Console.WriteLine("The active window has been minimized.");
+            //        windowState = "minimize";
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine("No active window found.");
+            //    }
+            //}
+            else if ((string)args.Request.Message["request"] == "checkState")
             {
                 //IntPtr activeWindowHandle = GetForegroundWindow();
 
