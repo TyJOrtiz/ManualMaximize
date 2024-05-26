@@ -140,9 +140,6 @@
                                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
                                                     <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource CaptionButtonPointerOverBackgroundBrush}"/>
                                                 </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColor}"/>
-                                                </ObjectAnimationUsingKeyFrames>
                                                 <!--<PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
                                             </Storyboard>
                                         </VisualState>
@@ -152,7 +149,7 @@
                                                     <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource CaptionButtonPressedBackgroundBrush}"/>
                                                 </ObjectAnimationUsingKeyFrames>
                                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemAccentColorDark1}"/>
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Gray"/>
                                                 </ObjectAnimationUsingKeyFrames>
                                                 <!--<PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>-->
                                             </Storyboard>

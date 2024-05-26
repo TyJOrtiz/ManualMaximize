@@ -27,6 +27,7 @@ using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Toolkit.Uwp.UI;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -79,12 +80,20 @@ namespace ManualMaximize
         public MainPage()
         {
             this.InitializeComponent();
+            Window.Current.CoreWindow.PointerReleased += CoreWindow_PointerReleased;
             ApplicationView.TerminateAppOnFinalViewClose = true;
 
             this.SizeChanged += MainPage_SizeChanged;
             ApplicationView.GetForCurrentView().VisibleBoundsChanged += MainPage_VisibleBoundsChanged;
             //return;
+            Window.Current.Activated += Current_Activated;
             App.AppServiceRequestReceived += ServiceConnection_RequestReceived;
+        }
+
+        private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
+        {
+            var p = args.CurrentPoint.RawPosition;
+            Debug.WriteLine(p);
         }
 
         private void MainPage_VisibleBoundsChanged(ApplicationView sender, object args)
@@ -145,8 +154,14 @@ namespace ManualMaximize
             navigationClient.TitleBarPreferredVisibilityMode = AppWindowTitleBarVisibility.AlwaysHidden;
             TitleBarHost.Visibility = Visibility.Visible;
             Window.Current.SetTitleBar(TitleBar);
+            Window.Current.CoreWindow.TouchHitTesting += CoreWindow_TouchHitTesting;
             Toggle.Toggled += ToggleSwitch_Toggled;
             CheckWindowSize();
+        }
+
+        private void CoreWindow_TouchHitTesting(CoreWindow sender, TouchHitTestingEventArgs args)
+        {
+            throw new NotImplementedException();
         }
 
         private void CheckWindowSize()
@@ -379,6 +394,104 @@ namespace ManualMaximize
                         ((Button)sender).Content = "\uE718";
                         break;
                 }
+
+            }
+        }
+        private bool windowActive = true;
+
+        private void Current_Activated(object sender, WindowActivatedEventArgs e)
+        {
+            if (e.WindowActivationState == CoreWindowActivationState.Deactivated)
+            {
+                windowActive = false;
+                CaptionButtonArea.FindDescendants().OfType<Button>().ToList().ForEach(x => x.Opacity = 0.5);
+                AppTitleTextBlock.Opacity = 0.5;
+            }
+            else
+            {
+                windowActive = true;
+                CaptionButtonArea.FindDescendants().OfType<Button>().ToList().ForEach(x => x.Opacity = 1);
+                AppTitleTextBlock.Opacity = 1;
+            }
+        }
+
+        private void CaptionButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ((Button)sender).Opacity = 1;
+        }
+
+        private void CaptionButton_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (windowActive == false)
+            {
+                ((Button)sender).Opacity = 0.5;
+            }
+        }
+
+        private void TitleBar_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+
+        }
+
+        private async void Image_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "showSystemMenu");
+            valueSet.Add("handle", App.MainHandle.ToInt32());
+
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            if (response.Message.Any())
+            {
+                Debug.WriteLine(response.Message.First());
+                switch (response.Message.First().Value.ToString())
+                {
+                    case "pinned":
+
+                        ((Button)sender).Content = "\uE77A";
+                        break;
+                    case "unpinned":
+
+                        ((Button)sender).Content = "\uE718";
+                        break;
+                }
+
+            }
+        }
+
+        private async void Image_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "showSystemMenu");
+            valueSet.Add("handle", App.MainHandle.ToInt32());
+
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            if (response.Message.Any())
+            {
+                Debug.WriteLine(response.Message.First());
+                switch (response.Message.First().Value.ToString())
+                {
+                    case "pinned":
+
+                        ((Button)sender).Content = "\uE77A";
+                        break;
+                    case "unpinned":
+
+                        ((Button)sender).Content = "\uE718";
+                        break;
+                }
+
+            }
+        }
+
+        private async void Image_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            await ApplicationView.GetForCurrentView().TryConsolidateAsync();
+            try
+            {
+                Application.Current.Exit();
+            }
+            catch
+            {
 
             }
         }
