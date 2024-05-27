@@ -13,14 +13,6 @@
         <SplitView x:Name="MySplit" DisplayMode="Inline" Visibility="Collapsed" IsPaneOpen="False" PaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}">
             
         </SplitView>
-        <Grid Background="Transparent">
-                <StackPanel VerticalAlignment="Center" Visibility="Visible" HorizontalAlignment="Center">
-                    <ToggleSwitch IsOn="True" x:Name="Toggle" Header="Custom Title bar buttons"></ToggleSwitch>
-                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.MinimizeButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Minimize button"></ToggleSwitch>
-                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.MaximizeButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Maximize/Restore button"></ToggleSwitch>
-                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.CloseButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Close button"></ToggleSwitch>
-                </StackPanel>
-            </Grid>
         <Grid Background="Transparent" x:Name="TitleBarHost" Margin="0,0,0,0" Visibility="Collapsed" VerticalAlignment="Top">
             <Grid Background="Transparent" RightTapped="TitleBar_RightTapped" IsHitTestVisible="True" Height="48" x:Name="TitleBar">
                 <Grid.ColumnDefinitions>
@@ -283,7 +275,22 @@ Margin="16,0,0,0" RightTapped="Image_RightTapped"/>
                 </Button>
             </StackPanel>
             <StackPanel x:Name="CaptionButtonArea" Margin="4" Visibility="Visible" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
-                <Button PointerEntered="CaptionButton_PointerEntered" PointerExited="CaptionButton_PointerExited" Height="40" CornerRadius="4" Width="40" Content="&#xE718;" Margin="0,0,2,0" Click="Button_Click_1" Style="{ThemeResource CaptionButtonStyle}">
+                <Button PointerEntered="CaptionButton_PointerEntered" PointerExited="CaptionButton_PointerExited" Height="40" CornerRadius="4" Width="40" Content="&#xE712;" Margin="0,0,2,0" Style="{ThemeResource CaptionButtonStyle}">
+                    <Button.Flyout>
+                        <Flyout>
+                            <Grid Background="Transparent">
+                                <StackPanel VerticalAlignment="Center" Visibility="Visible" HorizontalAlignment="Center">
+                                    <ToggleSwitch IsOn="True" x:Name="Toggle" Header="Custom Title bar buttons"></ToggleSwitch>
+                                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.MinimizeButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Minimize button"></ToggleSwitch>
+                                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.MaximizeButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Maximize/Restore button"></ToggleSwitch>
+                                    <ToggleSwitch IsOn="{x:Bind local:App.AppViewModel.CloseButtonVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  Header="Show Close button"></ToggleSwitch>
+                                </StackPanel>
+                            </Grid>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button PointerEntered="CaptionButton_PointerEntered" Visibility="Collapsed" PointerExited="CaptionButton_PointerExited" Height="40" CornerRadius="4" Width="40" Content="&#xE718;" Margin="2,0,2,0" Click="Button_Click_1" Style="{ThemeResource CaptionButtonStyle}">
+                    
                 </Button>
                 <Button x:Name="ClickButton" PointerEntered="CaptionButton_PointerEntered" PointerExited="CaptionButton_PointerExited" Style="{ThemeResource CaptionButtonStyle}" Margin="2,0" IsTabStop="False" Visibility="{x:Bind local:App.AppViewModel.MinimizeButtonVisible, Mode=OneWay}" IsFocusEngagementEnabled="False" Click="Button_Click2" Height="40" Width="40" CornerRadius="4" FontSize="10">&#xE921;
 

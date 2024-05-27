@@ -80,6 +80,7 @@ namespace ManualMaximize
         public MainPage()
         {
             this.InitializeComponent();
+            App.MaximizeButton = ClickButton2;
             Window.Current.CoreWindow.PointerReleased += CoreWindow_PointerReleased;
             ApplicationView.TerminateAppOnFinalViewClose = true;
 
@@ -98,16 +99,19 @@ namespace ManualMaximize
 
         private void MainPage_VisibleBoundsChanged(ApplicationView sender, object args)
         {
+            //CheckWindowSize();
             //Debug.WriteLine(ApplicationView.GetForCurrentView().IsFullScreenMode);
             if (ApplicationView.GetForCurrentView().IsFullScreenMode)
             {
                 ClickButton2.Visibility = Visibility.Collapsed;
                 FullScreenButton.Visibility = Visibility.Visible;
+                TitleBarHost.Visibility = Visibility.Collapsed;
             }
             else
             {
                 ClickButton2.Visibility = Visibility.Visible;
                 FullScreenButton.Visibility = Visibility.Collapsed;
+                TitleBarHost.Visibility = Visibility.Visible;
             }
         }
 
@@ -154,14 +158,8 @@ namespace ManualMaximize
             navigationClient.TitleBarPreferredVisibilityMode = AppWindowTitleBarVisibility.AlwaysHidden;
             TitleBarHost.Visibility = Visibility.Visible;
             Window.Current.SetTitleBar(TitleBar);
-            Window.Current.CoreWindow.TouchHitTesting += CoreWindow_TouchHitTesting;
             Toggle.Toggled += ToggleSwitch_Toggled;
             CheckWindowSize();
-        }
-
-        private void CoreWindow_TouchHitTesting(CoreWindow sender, TouchHitTestingEventArgs args)
-        {
-            throw new NotImplementedException();
         }
 
         private void CheckWindowSize()
@@ -233,63 +231,38 @@ namespace ManualMaximize
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "toggleState");
+            valueSet.Add("handle", App.MainHandle.ToInt32());
 
-            //if (App._appServiceConnection != null)
-            //{
-            //ValueSet valueSet1 = new ValueSet();
-            //valueSet1.Add("request", "getWindowHandle");
-
-            //AppServiceResponse response1 = await App.Connection.SendMessageAsync(valueSet1);
-            //if (response1.Message.Any())
-            //{
-            //    Debug.WriteLine(response1.Message.First().Value);
-            //    IntPtr y = new IntPtr((int)response1.Message.First().Value);
-            //    try
-            //    {
-            //        ShowWindow(y, SW_MAXIMIZE);
-            //    }
-            //    catch
-            //    {
-
-            //    }
-            //}
-            /*return*/
-                ValueSet valueSet = new ValueSet();
-                valueSet.Add("request", "toggleState");
-                valueSet.Add("handle", App.MainHandle.ToInt32());
-
-                AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
-                if (response.Message.Any())
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            if (response.Message.Any())
+            {
+                //Debug.WriteLine(response.Message.First());
+                switch (response.Message.First().Value.ToString())
                 {
-                    //Debug.WriteLine(response.Message.First());
-                    switch (response.Message.First().Value.ToString())
-                    {
-                        case "maximize":
+                    case "maximize":
 
-                            ClickButton2.Content = "\uE923";
-                            break;
-                        case "restore":
+                        ClickButton2.Content = "\uE923";
+                        break;
+                    case "restore":
 
-                            ClickButton2.Content = "\uE922";
-                            break;
-                    }
+                        ClickButton2.Content = "\uE922";
+                        break;
                 }
-            //}
+            }
         }
         private async void Button_Click2(object sender, RoutedEventArgs e)
         {
-            //if (App._appServiceConnection != null)
-            //{
-                ValueSet valueSet = new ValueSet();
-                valueSet.Add("request", "minimize");
-                valueSet.Add("handle", App.MainHandle.ToInt32());
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "minimize");
+            valueSet.Add("handle", App.MainHandle.ToInt32());
 
             AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
-                if (response.Message.Any())
-                {
-                    //Debug.WriteLine(response.Message.First());
-                }
-            //}
+            if (response.Message.Any())
+            {
+                //Debug.WriteLine(response.Message.First());
+            }
         }
 
         private async void Button_Click_2(object sender, RoutedEventArgs e)

@@ -138,6 +138,13 @@ namespace WindowHelper
             public int right;
             public int bottom;
         }
+        public struct MARGINS
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
         private const int HTMAXBUTTON = 9;
         private IntPtr HwndSourceHook(IntPtr hwnd)
         {
@@ -182,7 +189,8 @@ namespace WindowHelper
 
         [DllImport("user32.dll")]
   private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
         private const int GWL_STYLE = -16;
         private const int WS_SYSMENU = 0x80000;
         private const int WS_MAXIMIZEBOX = 0x10000; //maximize button
@@ -264,6 +272,82 @@ namespace WindowHelper
                 return;
             PostMessage(appWindow, WM_SYSCOMMAND, new IntPtr(command), IntPtr.Zero);
         }
+        private delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private const int WH_CALLWNDPROC = 4;
+
+        private HookProc _hookProc;
+        private IntPtr _hookHandle = IntPtr.Zero;
+        private IntPtr _targetWindowHandle = IntPtr.Zero;
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern uint GetProcessId(IntPtr hProcess);
+
+        private const int GWLP_HWNDPARENT = -8;
+        private const int GWLP_ID = -12;
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0)
+            {
+                // Intercept messages sent to the target window
+                var message = (CWPSTRUCT)Marshal.PtrToStructure(lParam, typeof(CWPSTRUCT));
+                if (message.hwnd == _targetWindowHandle)
+                {
+                    // Handle the intercepted message (e.g., log it)
+                    Console.WriteLine($"Message: {message.message}, wParam: {message.wParam}, lParam: {message.lParam}");
+                }
+            }
+            // Call the next hook in the chain
+            return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct CWPSTRUCT
+        {
+            public IntPtr lParam;
+            public IntPtr wParam;
+            public int message;
+            public IntPtr hwnd;
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+        public enum HitTest
+        {
+            HTNOWHERE = 0,
+            HTCLIENT = 1,
+            HTCAPTION = 2,
+            HTGROWBOX = 4,
+            HTSIZE = HTGROWBOX,
+            HTMINBUTTON = 8,
+            HTMAXBUTTON = 9,
+            HTLEFT = 10,
+            HTRIGHT = 11,
+            HTTOP = 12,
+            HTTOPLEFT = 13,
+            HTTOPRIGHT = 14,
+            HTBOTTOM = 15,
+            HTBOTTOMLEFT = 16,
+            HTBOTTOMRIGHT = 17,
+            HTREDUCE = HTMINBUTTON,
+            HTZOOM = HTMAXBUTTON,
+            HTSIZEFIRST = HTLEFT,
+            HTSIZELAST = HTBOTTOMRIGHT,
+            HTTRANSPARENT = -1
+        }
         private async void ServiceConnection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             var def = args.GetDeferral();
@@ -271,7 +355,40 @@ namespace WindowHelper
             //Debug.WriteLine("hi");
             string windowState = "";
             var activeWindowHandle = GetForegroundWindow();
+        //    _targetWindowHandle = activeWindowHandle;
+        //    MARGINS margins = new MARGINS
+        //    {
+        //        Left = 0,
+        //        Top = 0,
+        //        Right = 0,
+        //        Bottom = 0,
+        //    };
+        //    IntPtr lParam = (IntPtr)((996 << 16) | (31 & 0xFFFF));
 
+
+        //const int SC_KEYMENU = 0xF100;
+        //const int VK_MENU = 0x12;
+        //    // Send the WM_NCHITTEST message
+        //    GetWindowThreadProcessId(activeWindowHandle, out uint pid);
+        //    var p = Convert.ToInt32(pid);
+        //    Debug.WriteLine(Convert.ToInt32(pid));
+        //    //return;
+        //    //uint targetThreadId = GetWindowThreadProcessId(_targetWindowHandle, out _);
+
+        //    // Set the hook to monitor messages sent to the target window
+        //    _hookProc = new HookProc(HookCallback);
+        //    Process process = Process.GetProcessById(p);
+        //    IntPtr hMod = GetModuleHandle(process.MainModule.ModuleName);
+        //    _hookHandle = SetWindowsHookEx(WH_CALLWNDPROC, _hookProc, hMod, (uint)p);
+
+        //    if (_hookHandle == IntPtr.Zero)
+        //    {
+        //        Debug.WriteLine("Failed to set hook.");
+        //    }
+            //var msg = PostMessage(activeWindowHandle, WM_NCHITTEST, (IntPtr)0, IntPtr.Zero);
+            
+            //PostMessage(activeWindowHandle, WM_SYSCOMMAND, (IntPtr)SC_KEYMENU, (IntPtr)VK_MENU);
+            //return;
             // Get the cursor position
             //GetCursorPos(out POINT cursorPos);
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -30,9 +31,12 @@ namespace ManualMaximize
     {
         public static ViewModel AppViewModel { get; private set; }
         public static IntPtr MainHandle { get; set; } = new IntPtr(-1);
+        public static Button MaximizeButton { get; internal set; }
 
         public static BackgroundTaskDeferral AppServiceDeferral = null;
         public static AppServiceConnection Connection = null;
+        private IntPtr _oldWndProc;
+
         public static event EventHandler AppServiceDisconnected;
         public static event EventHandler<AppServiceTriggerDetails> AppServiceConnected;
         /// <summary>
@@ -134,6 +138,93 @@ namespace ManualMaximize
         //    AppServiceRequestReceived?.Invoke(sender, args);
         //    messageDeferral.Complete();
         //}
+        private bool snapLayoutInvoked = false;
+        private IntPtr WindowProcess(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam)
+        {
+            Debug.WriteLine(message);
+            //Debug.WriteLine(wParam.ToInt32());
+            //Debug.WriteLine(lParam.ToInt32() / 100000);
+            if (message == 132)
+            { 
+                int x = (short)(lParam.ToInt32() & 0x0000FFFF);
+                int y = (short)((lParam.ToInt32() & 0xFFFF0000) >> 16);
+                //Debug.WriteLine($"{x / 1}, {y / 1}");
+                //Debug.WriteLine((y / 2));
+                //Debug.WriteLine(Window.Current.Bounds.Top - (y / 2));
+                double distanceFromRightEdge = Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.X - Window.Current.Bounds.Right, 0, MidpointRounding.ToEven);
+                double distanceFromTopEdge = Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.Y - Window.Current.Bounds.Top, 0, MidpointRounding.ToEven);
+                //Debug.WriteLine(Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.Y - Window.Current.Bounds.Top, 0, MidpointRounding.ToEven));
+                //Debug.WriteLine(Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.X - Window.Current.Bounds.Right, 0, MidpointRounding.ToEven));
+                //Debug.WriteLineIf(distanceFromTopEdge <= 44, "height is less than 44");
+                //Debug.WriteLineIf(distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48, "width is less than 87");
+                if ((distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48) && distanceFromTopEdge <= 44)
+                {
+                    if (message == 132)
+                    {
+                        dynamic coreWindow = Windows.UI.Core.CoreWindow.GetForCurrentThread();
+                        var interop = (ICoreWindowInterop)coreWindow;
+                        interop.MessageHandled = true;
+                        //snapLayoutInvoked = true;
+                        return (IntPtr)9;
+                    }
+                    else
+                    {
+                        //snapLayoutInvoked = false;
+                        return (IntPtr)1;
+                    }
+
+                } 
+            }
+            else if (message == 533)
+            {
+                int x = (short)(lParam.ToInt32() & 0x0000FFFF);
+                int y = (short)((lParam.ToInt32() & 0xFFFF0000) >> 16);
+                //Debug.WriteLine($"{x / 1}, {y / 1}");
+                //Debug.WriteLine((y / 2));
+                //Debug.WriteLine(Window.Current.Bounds.Top - (y / 2));
+                double distanceFromRightEdge = Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.X - Window.Current.Bounds.Right, 0, MidpointRounding.ToEven);
+                double distanceFromTopEdge = Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.Y - Window.Current.Bounds.Top, 0, MidpointRounding.ToEven);
+                //Debug.WriteLine(Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.Y - Window.Current.Bounds.Top, 0, MidpointRounding.ToEven));
+                //Debug.WriteLine(Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.X - Window.Current.Bounds.Right, 0, MidpointRounding.ToEven));
+                //Debug.WriteLineIf(distanceFromTopEdge <= 44, "height is less than 44");
+                //Debug.WriteLineIf(distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48, "width is less than 87");
+                if ((distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48) && distanceFromTopEdge <= 44)
+                {
+                    InvokeToggle();
+                        //snapLayoutInvoked = false;
+                        return (IntPtr)1;
+
+                }
+            }
+            // Standard WndProc handling code here
+
+            // Call the "base" WndProc
+            return Native.Interop.CallWindowProc(_oldWndProc, hwnd, message, wParam, lParam);
+        }
+
+        private async void InvokeToggle()
+        {
+            ValueSet valueSet = new ValueSet();
+            valueSet.Add("request", "toggleState");
+            valueSet.Add("handle", App.MainHandle.ToInt32());
+
+            AppServiceResponse response = await App.Connection.SendMessageAsync(valueSet);
+            if (response.Message.Any())
+            {
+                //Debug.WriteLine(response.Message.First());
+                switch (response.Message.First().Value.ToString())
+                {
+                    case "maximize":
+
+                        MaximizeButton.Content = "\uE923";
+                        break;
+                    case "restore":
+
+                        MaximizeButton.Content = "\uE922";
+                        break;
+                }
+            }
+        }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -161,6 +252,8 @@ namespace ManualMaximize
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
+                _oldWndProc = Native.WndProc.SetWndProc(WindowProcess);
+
                 dynamic corewin = Window.Current.CoreWindow;
                 var interop = (ICoreWindowInterop)corewin;
                 var handle = interop.WindowHandle;
