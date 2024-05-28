@@ -141,7 +141,7 @@ namespace ManualMaximize
         private bool snapLayoutInvoked = false;
         private IntPtr WindowProcess(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam)
         {
-            Debug.WriteLine(message);
+            //Debug.WriteLine(message);
             //Debug.WriteLine(wParam.ToInt32());
             //Debug.WriteLine(lParam.ToInt32() / 100000);
             if (message == 132)
@@ -157,7 +157,7 @@ namespace ManualMaximize
                 //Debug.WriteLine(Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.X - Window.Current.Bounds.Right, 0, MidpointRounding.ToEven));
                 //Debug.WriteLineIf(distanceFromTopEdge <= 44, "height is less than 44");
                 //Debug.WriteLineIf(distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48, "width is less than 87");
-                if ((distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48) && distanceFromTopEdge <= 44)
+                if ((distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48) && distanceFromTopEdge <= 44 && AppViewModel.MaximizeButtonVisible == true)
                 {
                     if (message == 132)
                     {
@@ -188,7 +188,7 @@ namespace ManualMaximize
                 //Debug.WriteLine(Math.Round(Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition.X - Window.Current.Bounds.Right, 0, MidpointRounding.ToEven));
                 //Debug.WriteLineIf(distanceFromTopEdge <= 44, "height is less than 44");
                 //Debug.WriteLineIf(distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48, "width is less than 87");
-                if ((distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48) && distanceFromTopEdge <= 44)
+                if ((distanceFromRightEdge >= -88 && distanceFromRightEdge <= -48) && distanceFromTopEdge <= 44 && AppViewModel.MaximizeButtonVisible == true)
                 {
                     InvokeToggle();
                         //snapLayoutInvoked = false;
